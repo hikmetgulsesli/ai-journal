@@ -57,8 +57,11 @@ export function ThemeProvider({ children }: ThemeProviderProps) {
     ? systemColorScheme === 'dark' 
     : theme === 'dark';
 
-  // Get the appropriate color palette
-  const themeColors = isDark ? colors.dark : colors.light;
+  // Get the appropriate color palette and merge with global colors
+  const themeColors = {
+    ...colors,
+    ...(isDark ? colors.dark : colors.light),
+  } as ThemeColors;
 
   // Don't render until we've loaded the theme
   if (!isLoaded) {
