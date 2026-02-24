@@ -107,4 +107,32 @@ export const shadows = {
   },
 } as const;
 
-export type ThemeColors = typeof colors.dark | typeof colors.light;
+// Base theme colors interface
+interface BaseThemeColors {
+  background: string;
+  surface: string;
+  surfaceAlt: string;
+  border: string;
+  text: string;
+  textMuted: string;
+  textSubtle: string;
+}
+
+// Extended theme colors that include primary, mood, etc.
+export interface ThemeColors extends BaseThemeColors {
+  primary: string;
+  primaryDark: string;
+  accent: string;
+  accentDark: string;
+  mood: {
+    1: string;
+    2: string;
+    3: string;
+    4: string;
+    5: string;
+  };
+  success: string;
+  warning: string;
+  error: string;
+  info: string;
+};

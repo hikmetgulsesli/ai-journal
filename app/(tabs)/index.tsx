@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -32,7 +32,7 @@ function getTodayDateString(): string {
 }
 
 export default function TodayScreen() {
-  const { colors, isDark } = useTheme();
+  const { colors } = useTheme();
   const [entryText, setEntryText] = useState('');
   const [selectedMood, setSelectedMood] = useState<MoodLevel | undefined>();
   const [todayEntries, setTodayEntries] = useState<JournalEntry[]>([]);
