@@ -1,9 +1,9 @@
 import { Tabs } from 'expo-router';
 import { useTheme } from '../../src/contexts/ThemeContext';
-import { Text, StyleSheet } from 'react-native';
+import { PenLine, Calendar, BarChart3, Settings } from 'lucide-react-native';
 
 export default function TabLayout() {
-  const { colors, isDark } = useTheme();
+  const { colors } = useTheme();
 
   return (
     <Tabs
@@ -38,7 +38,7 @@ export default function TabLayout() {
           title: 'Bugün',
           headerTitle: 'AI Günlük',
           tabBarIcon: ({ color, size }) => (
-            <Text style={{ fontSize: size, color }}>✏️</Text>
+            <PenLine size={size} color={color} />
           ),
         }}
       />
@@ -48,7 +48,7 @@ export default function TabLayout() {
           title: 'Takvim',
           headerTitle: 'Takvim',
           tabBarIcon: ({ color, size }) => (
-            <Text style={{ fontSize: size, color }}>📅</Text>
+            <Calendar size={size} color={color} />
           ),
         }}
       />
@@ -58,7 +58,7 @@ export default function TabLayout() {
           title: 'İçgörüler',
           headerTitle: 'İçgörüler',
           tabBarIcon: ({ color, size }) => (
-            <Text style={{ fontSize: size, color }}>📊</Text>
+            <BarChart3 size={size} color={color} />
           ),
         }}
       />
@@ -68,7 +68,7 @@ export default function TabLayout() {
           title: 'Ayarlar',
           headerTitle: 'Ayarlar',
           tabBarIcon: ({ color, size }) => (
-            <Text style={{ fontSize: size, color }}>⚙️</Text>
+            <Settings size={size} color={color} />
           ),
         }}
       />

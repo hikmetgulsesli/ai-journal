@@ -2,6 +2,7 @@ import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { useTheme } from '../src/contexts/ThemeContext';
 import { ThemeProvider } from '../src/contexts/ThemeContext';
+import { SettingsProvider } from '../src/contexts/SettingsContext';
 import { useFonts } from 'expo-font';
 import Sora from '@expo-google-fonts/sora';
 import NunitoSans from '@expo-google-fonts/nunito-sans';
@@ -36,7 +37,9 @@ export default function RootLayout() {
 
   return (
     <ThemeProvider>
-      <RootLayoutNav />
+      <SettingsProvider>
+        <RootLayoutNav />
+      </SettingsProvider>
     </ThemeProvider>
   );
 }

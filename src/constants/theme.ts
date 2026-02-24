@@ -5,6 +5,8 @@ export const colors = {
   // Primary colors
   primary: '#6366f1',
   primaryDark: '#4f46e5',
+  secondary: '#8b5cf6',
+  secondaryDark: '#7c3aed',
   accent: '#f59e0b',
   accentDark: '#d97706',
 
@@ -17,6 +19,22 @@ export const colors = {
     text: '#f8fafc',
     textMuted: '#94a3b8',
     textSubtle: '#64748b',
+    primary: '#6366f1',
+    primaryDark: '#4f46e5',
+    secondary: '#8b5cf6',
+    secondaryDark: '#7c3aed',
+    accent: '#f59e0b',
+    mood: {
+      1: '#ef4444',
+      2: '#f97316',
+      3: '#eab308',
+      4: '#22c55e',
+      5: '#10b981',
+    },
+    success: '#10b981',
+    warning: '#f59e0b',
+    error: '#ef4444',
+    info: '#3b82f6',
   },
 
   // Light theme
@@ -28,6 +46,22 @@ export const colors = {
     text: '#0f172a',
     textMuted: '#64748b',
     textSubtle: '#94a3b8',
+    primary: '#6366f1',
+    primaryDark: '#4f46e5',
+    secondary: '#8b5cf6',
+    secondaryDark: '#7c3aed',
+    accent: '#f59e0b',
+    mood: {
+      1: '#ef4444',
+      2: '#f97316',
+      3: '#eab308',
+      4: '#22c55e',
+      5: '#10b981',
+    },
+    success: '#10b981',
+    warning: '#f59e0b',
+    error: '#ef4444',
+    info: '#3b82f6',
   },
 
   // Mood colors
@@ -107,4 +141,4 @@ export const shadows = {
   },
 } as const;
 
-export type ThemeColors = typeof colors.dark | typeof colors.light;
+export type ThemeColors = typeof colors.dark;

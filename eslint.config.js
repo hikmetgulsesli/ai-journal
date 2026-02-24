@@ -9,6 +9,10 @@ export default tseslint.config(
     languageOptions: {
       ecmaVersion: "latest",
       sourceType: "module",
+      parserOptions: {
+        project: './tsconfig.json',
+        tsconfigRootDir: process.cwd(),
+      },
     },
     rules: {
       "@typescript-eslint/no-unused-vars": ["warn", { argsIgnorePattern: "^_" }],
@@ -17,6 +21,6 @@ export default tseslint.config(
     },
   },
   {
-    ignores: ["node_modules", "dist", ".expo", "android", "ios"],
+    ignores: ["node_modules", "dist", ".expo", "android", "ios", ".worktrees"],
   }
 );

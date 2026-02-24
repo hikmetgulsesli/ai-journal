@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -9,12 +9,14 @@ import {
   Alert,
   KeyboardAvoidingView,
   Platform,
+  ActivityIndicator,
 } from 'react-native';
 import { useTheme } from '../../src/contexts/ThemeContext';
 import { JournalEntry, MoodLevel, MOOD_EMOJIS, MOOD_LABELS } from '../../src/types';
 import { STORAGE_KEYS } from '../../src/types';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { v4 as uuidv4 } from 'uuid';
+import { generatePrompt, generateReflection, getContextualPrompt } from '../../src/services/aiService';
 
 function formatDateTR(date: Date): string {
   const options: Intl.DateTimeFormatOptions = {
@@ -32,11 +34,20 @@ function getTodayDateString(): string {
 }
 
 export default function TodayScreen() {
-  const { colors, isDark } = useTheme();
+  const { colors } = useTheme();
   const [entryText, setEntryText] = useState('');
   const [selectedMood, setSelectedMood] = useState<MoodLevel | undefined>();
   const [todayEntries, setTodayEntries] = useState<JournalEntry[]>([]);
   const [isSaving, setIsSaving] = useState(false);
+  
+  // AI Prompt State
+  const [aiPrompt, setAiPrompt] = useState<string | null>(null);
+  const [isGeneratingPrompt, setIsGeneratingPrompt] = useState(false);
+  const [promptError, setPromptError] = useState<string | null>(null);
+  
+  // AI Reflection State
+  const [reflectionEntryId, setReflectionEntryId] = useState<string | null>(null);
+  const [isGeneratingReflection, setIsGeneratingReflection] = useState(false);
 
   const today = new Date();
   const dateString = formatDateTR(today);
@@ -66,6 +77,64 @@ export default function TodayScreen() {
     return text.trim().split(/\s+/).filter(word => word.length > 0).length;
   };
 
+  const handleGeneratePrompt = async () => {
+    setIsGeneratingPrompt(true);
+    setPromptError(null);
+    
+    try {
+      const result = await generatePrompt();
+      
+      if (result.success && result.data) {
+        setAiPrompt(result.data);
+      } else {
+        // Fallback to contextual prompt if API fails
+        const fallbackPrompt = getContextualPrompt();
+        setAiPrompt(fallbackPrompt);
+        if (result.error) {
+          setPromptError(result.error);
+        }
+      }
+    } catch {
+      const fallbackPrompt = getContextualPrompt();
+      setAiPrompt(fallbackPrompt);
+      setPromptError('Bir hata oluştu, varsayılan soru kullanılıyor.');
+    } finally {
+      setIsGeneratingPrompt(false);
+    }
+  };
+
+  const handleGenerateReflection = async (entry: JournalEntry) => {
+    setIsGeneratingReflection(true);
+    setReflectionEntryId(entry.id);
+    
+    try {
+      const result = await generateReflection(entry.text);
+      
+      if (result.success && result.data) {
+        // Update the entry with AI response
+        const entriesJson = await AsyncStorage.getItem(STORAGE_KEYS.ENTRIES);
+        if (entriesJson) {
+          const allEntries: JournalEntry[] = JSON.parse(entriesJson);
+          const updatedEntries = allEntries.map(e => 
+            e.id === entry.id ? { ...e, aiResponse: result.data } : e
+          );
+          await AsyncStorage.setItem(STORAGE_KEYS.ENTRIES, JSON.stringify(updatedEntries));
+          await loadTodayEntries();
+        }
+      } else {
+        Alert.alert(
+          'AI Yorumu',
+          result.error || 'Yorum oluşturulamadı. Lütfen API anahtarlarınızı kontrol edin.'
+        );
+      }
+    } catch {
+      Alert.alert('Hata', 'Yorum oluşturulurken bir hata oluştu.');
+    } finally {
+      setIsGeneratingReflection(false);
+      setReflectionEntryId(null);
+    }
+  };
+
   const saveEntry = async () => {
     if (!entryText.trim()) {
       Alert.alert('Uyarı', 'Lütfen bir şeyler yazın!');
@@ -74,13 +143,15 @@ export default function TodayScreen() {
 
     setIsSaving(true);
     try {
+      const wordCount = countWords(entryText);
       const newEntry: JournalEntry = {
         id: uuidv4(),
         text: entryText.trim(),
         date: todayISO,
         createdAt: new Date().toISOString(),
         mood: selectedMood,
-        wordCount: countWords(entryText),
+        wordCount,
+        aiPrompt: aiPrompt || undefined,
       };
 
       // Load existing entries
@@ -96,11 +167,13 @@ export default function TodayScreen() {
       // Clear form
       setEntryText('');
       setSelectedMood(undefined);
+      setAiPrompt(null);
+      setPromptError(null);
       
       // Reload entries
       await loadTodayEntries();
       
-      Alert.alert('Başarılı', 'Günlük kaydedildi! ✨');
+      Alert.alert('Başarılı', 'Günlük kaydedildi!');
     } catch (error) {
       console.error('Failed to save entry:', error);
       Alert.alert('Hata', 'Günlük kaydedilirken bir hata oluştu.');
@@ -163,6 +236,57 @@ export default function TodayScreen() {
     </View>
   );
 
+  const renderPromptCard = () => {
+    if (!aiPrompt && !isGeneratingPrompt) return null;
+    
+    return (
+      <View style={[styles.promptCard, { backgroundColor: colors.primary + '20' }]}>
+        <View style={styles.promptHeader}>
+          <Text style={[styles.promptTitle, { color: colors.primary }]}>
+            AI Soru
+          </Text>
+          <TouchableOpacity onPress={() => setAiPrompt(null)}>
+            <Text style={[styles.promptClose, { color: colors.textMuted }]}>
+              Kapat
+            </Text>
+          </TouchableOpacity>
+        </View>
+        {isGeneratingPrompt ? (
+          <View style={styles.promptLoading}>
+            <ActivityIndicator size="small" color={colors.primary} />
+            <Text style={[styles.promptLoadingText, { color: colors.textMuted }]}>
+              Soru oluşturuluyor...
+            </Text>
+          </View>
+        ) : (
+          <Text style={[styles.promptText, { color: colors.text }]}>
+            {aiPrompt}
+          </Text>
+        )}
+        {promptError && (
+          <Text style={[styles.promptError, { color: colors.error }]}>
+            {promptError}
+          </Text>
+        )}
+      </View>
+    );
+  };
+
+  const renderReflectionCard = (entry: JournalEntry) => {
+    if (!entry.aiResponse) return null;
+    
+    return (
+      <View style={[styles.reflectionCard, { backgroundColor: colors.secondary + '15' }]}>
+        <Text style={[styles.reflectionTitle, { color: colors.secondary }]}>
+          AI Yorumu
+        </Text>
+        <Text style={[styles.reflectionText, { color: colors.text }]}>
+          {entry.aiResponse}
+        </Text>
+      </View>
+    );
+  };
+
   const renderEntryCard = (entry: JournalEntry) => {
     const time = new Date(entry.createdAt).toLocaleTimeString('tr-TR', {
       hour: '2-digit',
@@ -170,12 +294,12 @@ export default function TodayScreen() {
     });
 
     return (
-      <TouchableOpacity
-        key={entry.id}
-        style={[styles.entryCard, { backgroundColor: colors.surface }]}
-        onLongPress={() => deleteEntry(entry.id)}
-      >
-        <View style={styles.entryHeader}>
+    <TouchableOpacity
+      key={entry.id}
+      style={[styles.entryCard, { backgroundColor: colors.surface }]}
+      onLongPress={() => deleteEntry(entry.id)}
+    >
+      <View style={styles.entryHeader}>
           <Text style={[styles.entryTime, { color: colors.textMuted }]}>
             {time}
           </Text>
@@ -183,12 +307,38 @@ export default function TodayScreen() {
             <Text style={styles.entryMood}>{MOOD_EMOJIS[entry.mood]}</Text>
           )}
         </View>
+        
+        {entry.aiPrompt && (
+          <View style={[styles.entryPromptBadge, { backgroundColor: colors.primary + '20' }]}>
+            <Text style={[styles.entryPromptText, { color: colors.primary }]}>
+              Soru: {entry.aiPrompt}
+            </Text>
+          </View>
+        )}
+        
         <Text
           style={[styles.entryPreview, { color: colors.text }]}
           numberOfLines={2}
         >
           {entry.text}
         </Text>
+        
+        {renderReflectionCard(entry)}
+        
+        {entry.wordCount >= 50 && !entry.aiResponse && (
+          <TouchableOpacity
+            style={[styles.reflectionButton, { backgroundColor: colors.secondary }]}
+            onPress={() => handleGenerateReflection(entry)}
+            disabled={isGeneratingReflection && reflectionEntryId === entry.id}
+          >
+            {isGeneratingReflection && reflectionEntryId === entry.id ? (
+              <ActivityIndicator size="small" color="#fff" />
+            ) : (
+              <Text style={styles.reflectionButtonText}>AI Yorumu Al</Text>
+            )}
+          </TouchableOpacity>
+        )}
+        
         <Text style={[styles.wordCount, { color: colors.textSubtle }]}>
           {entry.wordCount} kelime
         </Text>
@@ -220,6 +370,24 @@ export default function TodayScreen() {
             </Text>
           </View>
         )}
+
+        {/* AI Prompt Button */}
+        <TouchableOpacity
+          style={[styles.aiPromptButton, { borderColor: colors.primary }]}
+          onPress={handleGeneratePrompt}
+          disabled={isGeneratingPrompt}
+        >
+          {isGeneratingPrompt ? (
+            <ActivityIndicator size="small" color={colors.primary} />
+          ) : (
+            <Text style={[styles.aiPromptButtonText, { color: colors.primary }]}>
+              Bana bir soru sor
+            </Text>
+          )}
+        </TouchableOpacity>
+
+        {/* AI Prompt Card */}
+        {renderPromptCard()}
 
         {/* Journal Editor */}
         <View style={[styles.editorCard, { backgroundColor: colors.surface }]}>
@@ -292,6 +460,57 @@ const styles = StyleSheet.create({
   moodSummaryText: {
     fontSize: 14,
     fontFamily: 'Nunito Sans',
+  },
+  aiPromptButton: {
+    borderWidth: 1,
+    borderRadius: 12,
+    padding: 14,
+    alignItems: 'center',
+    marginBottom: 12,
+  },
+  aiPromptButtonText: {
+    fontSize: 16,
+    fontWeight: '600',
+    fontFamily: 'Sora',
+  },
+  promptCard: {
+    borderRadius: 12,
+    padding: 16,
+    marginBottom: 16,
+  },
+  promptHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 8,
+  },
+  promptTitle: {
+    fontSize: 14,
+    fontWeight: '600',
+    fontFamily: 'Sora',
+  },
+  promptClose: {
+    fontSize: 12,
+    fontFamily: 'Nunito Sans',
+  },
+  promptText: {
+    fontSize: 16,
+    fontFamily: 'Nunito Sans',
+    lineHeight: 24,
+  },
+  promptLoading: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  promptLoadingText: {
+    fontSize: 14,
+    fontFamily: 'Nunito Sans',
+  },
+  promptError: {
+    fontSize: 12,
+    fontFamily: 'Nunito Sans',
+    marginTop: 8,
   },
   editorCard: {
     borderRadius: 16,
@@ -368,15 +587,57 @@ const styles = StyleSheet.create({
   entryMood: {
     fontSize: 18,
   },
+  entryPromptBadge: {
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderRadius: 8,
+    marginBottom: 8,
+  },
+  entryPromptText: {
+    fontSize: 12,
+    fontFamily: 'Nunito Sans',
+  },
   entryPreview: {
     fontSize: 14,
     fontFamily: 'Nunito Sans',
     lineHeight: 20,
     marginBottom: 8,
   },
+  reflectionCard: {
+    borderRadius: 10,
+    padding: 12,
+    marginTop: 8,
+    marginBottom: 8,
+  },
+  reflectionTitle: {
+    fontSize: 13,
+    fontWeight: '600',
+    fontFamily: 'Sora',
+    marginBottom: 6,
+  },
+  reflectionText: {
+    fontSize: 14,
+    fontFamily: 'Nunito Sans',
+    lineHeight: 20,
+    fontStyle: 'italic',
+  },
+  reflectionButton: {
+    paddingVertical: 10,
+    paddingHorizontal: 16,
+    borderRadius: 8,
+    alignItems: 'center',
+    marginTop: 8,
+  },
+  reflectionButtonText: {
+    color: '#fff',
+    fontSize: 14,
+    fontWeight: '600',
+    fontFamily: 'Sora',
+  },
   wordCount: {
     fontSize: 12,
     fontFamily: 'Nunito Sans',
+    marginTop: 8,
   },
   emptyState: {
     alignItems: 'center',

@@ -1,0 +1,18 @@
+=== US-002: Journal Entry Core with Mood Tracking ===
+COMPLETED: 2026-02-24T18:55:00+03:00
+FILES CHANGED: 
+- app/(tabs)/index.tsx (main implementation)
+- src/types/index.ts (JournalEntry, MoodLevel types)
+- src/constants/theme.ts (ThemeColors type fix)
+- src/contexts/ThemeContext.tsx (colors merging fix)
+- assets/notification-icon.png (added for prebuild)
+- package.json, ios/, android/ (generated)
+
+KEY DECISIONS:
+- Used react-native-gesture-handler Swipeable for swipe-to-delete
+- Implemented mood selector with 5 emoji buttons tied to mood colors
+- Used Turkish locale for date formatting (tr-TR)
+- AsyncStorage key: @aijournal/entries
+- Entry detail view via modal presentation
+
+DEPENDENCIES ADDED: (none - all existing)
