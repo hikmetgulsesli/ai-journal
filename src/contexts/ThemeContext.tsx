@@ -1,14 +1,15 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { useColorScheme } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { colors, ThemeColors } from '../constants/theme';
+import { colors } from '../constants/theme';
 
 type ThemeMode = 'dark' | 'light' | 'system';
 
 interface ThemeContextType {
   theme: ThemeMode;
   isDark: boolean;
-  colors: ThemeColors;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  colors: any;
   setTheme: (theme: ThemeMode) => void;
 }
 
@@ -36,8 +37,8 @@ export function ThemeProvider({ children }: ThemeProviderProps) {
       if (savedTheme && ['dark', 'light', 'system'].includes(savedTheme)) {
         setThemeState(savedTheme as ThemeMode);
       }
-    } catch (error) {
-      console.error('Failed to load theme:', error);
+    } catch {
+      // Silent fail for theme loading
     } finally {
       setIsLoaded(true);
     }
@@ -47,8 +48,8 @@ export function ThemeProvider({ children }: ThemeProviderProps) {
     try {
       await AsyncStorage.setItem(THEME_STORAGE_KEY, newTheme);
       setThemeState(newTheme);
-    } catch (error) {
-      console.error('Failed to save theme:', error);
+    } catch {
+      // Silent fail for theme saving
     }
   };
 
