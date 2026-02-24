@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -6,7 +6,6 @@ import {
   ScrollView,
   StyleSheet,
   TextInput,
-  FlatList,
 } from 'react-native';
 import { useTheme } from '../../src/contexts/ThemeContext';
 import { JournalEntry, MOOD_EMOJIS, MoodLevel } from '../../src/types';
@@ -19,17 +18,17 @@ const MONTHS = [
   'Temmuz', 'Ağustos', 'Eylül', 'Ekim', 'Kasım', 'Aralık',
 ];
 
-function getDaysInMonth(year: number, month: number): number {
+export function getDaysInMonth(year: number, month: number): number {
   return new Date(year, month + 1, 0).getDate();
 }
 
-function getFirstDayOfMonth(year: number, month: number): number {
+export function getFirstDayOfMonth(year: number, month: number): number {
   const day = new Date(year, month, 1).getDay();
   // Convert to Monday-based (0 = Monday, 6 = Sunday)
   return day === 0 ? 6 : day - 1;
 }
 
-function formatDateString(year: number, month: number, day: number): string {
+export function formatDateString(year: number, month: number, day: number): string {
   return `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
 }
 
