@@ -8,6 +8,7 @@ interface SettingsContextType {
   isLoaded: boolean;
   updateSettings: (updates: Partial<AppSettings>) => Promise<void>;
   setAiModel: (model: AIModel) => Promise<void>;
+  setReminderSettings: (enabled: boolean, hour: number, minute: number) => Promise<void>;
 }
 
 const SettingsContext = createContext<SettingsContextType | undefined>(undefined);
@@ -53,8 +54,16 @@ export function SettingsProvider({ children }: SettingsProviderProps) {
     await updateSettings({ aiModel: model });
   };
 
+  const setReminderSettings = async (enabled: boolean, hour: number, minute: number) => {
+    await updateSettings({
+      reminderEnabled: enabled,
+      reminderHour: hour,
+      reminderMinute: minute,
+    });
+  };
+
   return (
-    <SettingsContext.Provider value={{ settings, isLoaded, updateSettings, setAiModel }}>
+    <SettingsContext.Provider value={{ settings, isLoaded, updateSettings, setAiModel, setReminderSettings }}>
       {children}
     </SettingsContext.Provider>
   );

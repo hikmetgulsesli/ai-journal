@@ -356,3 +356,32 @@ export async function generateWeeklySummary(entries: { text: string; date: strin
     error: 'API anahtarları bulunamadı veya yapılandırılmadı. Lütfen Ayarlar\'dan API anahtarlarınızı ekleyin.' 
   };
 }
+
+// Test API connection (US-008)
+export async function testConnection(): Promise<AIResponse> {
+  const keys = await loadApiKeys();
+  const settingsJson = await AsyncStorage.getItem(STORAGE_KEYS.SETTINGS);
+  const settings = settingsJson ? { ...DEFAULT_SETTINGS, ...JSON.parse(settingsJson) } : DEFAULT_SETTINGS;
+  const aiModel = settings.aiModel;
+
+  if (aiModel === 'minimax' && keys.minimax) {
+    return await callMinimax(
+      keys.minimax,
+      settings.minimaxBaseUrl,
+      'Merhaba, test mesajı.',
+      'Kısa bir test yanıtı ver.'
+    );
+  } else if (aiModel === 'kimi' && keys.kimi) {
+    return await callKimi(
+      keys.kimi,
+      settings.kimiBaseUrl,
+      'Merhaba, test mesajı.',
+      'Kısa bir test yanıtı ver.'
+    );
+  }
+
+  return {
+    success: false,
+    error: 'Seçili model için API anahtarı bulunamadı. Önce API anahtarınızı kaydedin.',
+  };
+}
