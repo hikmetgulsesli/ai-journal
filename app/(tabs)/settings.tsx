@@ -92,9 +92,9 @@ export default function SettingsScreen() {
   const handleSaveApiKeys = async () => {
     try {
       await saveApiKeys(minimaxKey || undefined, kimiKey || undefined);
-      Alert.alert('Basarili', 'API anahtarlari kaydedildi!');
+      Alert.alert('Başarılı', 'API anahtarları kaydedildi!');
     } catch {
-      Alert.alert('Hata', 'API anahtarlari kaydedilemedi.');
+      Alert.alert('Hata', 'API anahtarları kaydedilemedi.');
     }
   };
 
@@ -103,12 +103,12 @@ export default function SettingsScreen() {
     try {
       const result = await testConnection();
       if (result.success) {
-        Alert.alert('Basarili', 'AI baglantisi calisiyor!');
+        Alert.alert('Başarılı', 'AI bağlantısı çalışıyor!');
       } else {
-        Alert.alert('Baglanti Hatasi', result.error || 'Baglanti kurulamadi. API anahtarinizi kontrol edin.');
+        Alert.alert('Bağlantı Hatası', result.error || 'Bağlantı kurulamadı. API anahtarınızı kontrol edin.');
       }
     } catch {
-      Alert.alert('Hata', 'Baglanti testi sirasinda bir hata olustu.');
+      Alert.alert('Hata', 'Bağlantı testi sırasında bir hata oluştu.');
     } finally {
       setIsTesting(false);
     }
@@ -119,8 +119,8 @@ export default function SettingsScreen() {
       const hasPermission = await requestNotificationPermission();
       if (!hasPermission) {
         Alert.alert(
-          'Izin Gerekli',
-          'Hatirlatma bildirimleri gondermek icin bildirim izni gereklidir. Lutfen ayarlardan izin verin.'
+          'İzin Gerekli',
+          'Hatırlatma bildirimleri göndermek için bildirim izni gereklidir. Lütfen ayarlardan izin verin.'
         );
         return;
       }
@@ -158,7 +158,7 @@ export default function SettingsScreen() {
       await scheduleDailyReminder(reminderHour, reminderMinute);
     }
     const timeStr = String(reminderHour).padStart(2, '0') + ':' + String(reminderMinute).padStart(2, '0');
-    Alert.alert('Basarili', 'Hatirlatma saati ' + timeStr + ' olarak ayarlandi.');
+    Alert.alert('Başarılı', 'Hatırlatma saati ' + timeStr + ' olarak ayarlandı.');
   };
 
   const handleExportData = async () => {
@@ -168,7 +168,7 @@ export default function SettingsScreen() {
       const entries = entriesJson ? JSON.parse(entriesJson) : [];
 
       const exportData = {
-        appName: 'AI Gunluk',
+        appName: 'AI Günlük',
         exportDate: new Date().toISOString(),
         entryCount: entries.length,
         entries,
@@ -178,11 +178,11 @@ export default function SettingsScreen() {
 
       await Share.share({
         message: jsonString,
-        title: 'AI Gunluk Verileri',
+        title: 'AI Günlük Verileri',
       });
     } catch (error: any) {
       if (error?.message !== 'User did not share') {
-        Alert.alert('Hata', 'Veriler disa aktarilirken bir hata olustu.');
+        Alert.alert('Hata', 'Veriler dışa aktarılırken bir hata oluştu.');
       }
     } finally {
       setIsExporting(false);
@@ -191,12 +191,12 @@ export default function SettingsScreen() {
 
   const handleDeleteAllData = () => {
     Alert.alert(
-      'Tum Verileri Sil',
-      entryCount + ' gunluk girisi ve tum ayarlar kalici olarak silinecek. Bu islem geri alinamaz!',
+      'Tüm Verileri Sil',
+      entryCount + ' günlük girişi ve tüm ayarlar kalıcı olarak silinecek. Bu işlem geri alınamaz!',
       [
-        { text: 'Iptal', style: 'cancel' },
+        { text: 'İptal', style: 'cancel' },
         {
-          text: 'Tumunu Sil',
+          text: 'Tümünü Sil',
           style: 'destructive',
           onPress: async () => {
             try {
@@ -208,9 +208,9 @@ export default function SettingsScreen() {
               await cancelDailyReminder();
               setEntryCount(0);
               setTotalWords(0);
-              Alert.alert('Silindi', 'Tum veriler basariyla silindi.');
+              Alert.alert('Silindi', 'Tüm veriler başarıyla silindi.');
             } catch {
-              Alert.alert('Hata', 'Veriler silinirken bir hata olustu.');
+              Alert.alert('Hata', 'Veriler silinirken bir hata oluştu.');
             }
           },
         },
@@ -226,7 +226,7 @@ export default function SettingsScreen() {
       <ScrollView style={styles.container} keyboardShouldPersistTaps="handled">
         {/* Theme Section */}
         <View style={[styles.section, { backgroundColor: colors.surface }]}>
-          <Text style={[styles.sectionTitle, { color: colors.text }]}>Gorunum</Text>
+          <Text style={[styles.sectionTitle, { color: colors.text }]}>Görünüm</Text>
 
           {(['dark', 'light', 'system'] as ThemeMode[]).map((t) => (
             <Pressable
@@ -235,7 +235,7 @@ export default function SettingsScreen() {
               onPress={() => handleThemeChange(t)}
             >
               <Text style={[styles.optionText, { color: colors.text }]}>
-                {t === 'dark' ? 'Karanlik' : t === 'light' ? 'Aydinlik' : 'Sistem'}
+                {t === 'dark' ? 'Karanlık' : t === 'light' ? 'Aydınlık' : 'Sistem'}
               </Text>
               {theme === t && (
                 <Text style={[styles.checkmark, { color: colors.primary }]}>{'✓'}</Text>
@@ -246,7 +246,7 @@ export default function SettingsScreen() {
 
         {/* AI Model Section */}
         <View style={[styles.section, { backgroundColor: colors.surface }]}>
-          <Text style={[styles.sectionTitle, { color: colors.text }]}>AI Ayarlari</Text>
+          <Text style={[styles.sectionTitle, { color: colors.text }]}>AI Ayarları</Text>
 
           <Pressable
             style={[styles.option, selectedModel === 'minimax' && { backgroundColor: colors.surfaceAlt }]}
@@ -254,7 +254,7 @@ export default function SettingsScreen() {
           >
             <View style={{ flex: 1 }}>
               <Text style={[styles.optionText, { color: colors.text }]}>MiniMax M2.5</Text>
-              <Text style={[styles.optionSubtext, { color: colors.textMuted }]}>Daha hizli yanitlar</Text>
+              <Text style={[styles.optionSubtext, { color: colors.textMuted }]}>Daha hızlı yanıtlar</Text>
             </View>
             {selectedModel === 'minimax' && (
               <Text style={[styles.checkmark, { color: colors.primary }]}>{'✓'}</Text>
@@ -286,7 +286,7 @@ export default function SettingsScreen() {
               <>
                 <Wifi size={16} color={colors.primary} />
                 <Text style={[styles.testButtonText, { color: colors.primary }]}>
-                  Baglantiyi Test Et
+                  Bağlantıyı Test Et
                 </Text>
               </>
             )}
@@ -297,7 +297,7 @@ export default function SettingsScreen() {
         <View style={[styles.section, { backgroundColor: colors.surface }]}>
           <Pressable style={styles.sectionHeader} onPress={() => setShowApiKeys(!showApiKeys)}>
             <Text style={[styles.sectionTitleInline, { color: colors.text }]}>
-              API Anahtarlari
+              API Anahtarları
             </Text>
             {showApiKeys ? (
               <ChevronDown size={18} color={colors.textMuted} />
@@ -309,14 +309,14 @@ export default function SettingsScreen() {
           {showApiKeys && (
             <View style={styles.apiKeysContent}>
               <Text style={[styles.apiInfo, { color: colors.textMuted }]}>
-                API anahtarlariniz guvenli bir sekilde cihazinizda saklanir.
+                API anahtarlarınız güvenli bir şekilde cihazınızda saklanır.
               </Text>
 
               <View style={styles.inputGroup}>
                 <Text style={[styles.inputLabel, { color: colors.text }]}>MiniMax API Key</Text>
                 <TextInput
                   style={[styles.input, { color: colors.text, borderColor: colors.border, backgroundColor: colors.background }]}
-                  placeholder="MiniMax API anahtarinizi girin"
+                  placeholder="MiniMax API anahtarınızı girin"
                   placeholderTextColor={colors.textSubtle}
                   value={minimaxKey}
                   onChangeText={setMinimaxKey}
@@ -330,7 +330,7 @@ export default function SettingsScreen() {
                 <Text style={[styles.inputLabel, { color: colors.text }]}>Kimi API Key</Text>
                 <TextInput
                   style={[styles.input, { color: colors.text, borderColor: colors.border, backgroundColor: colors.background }]}
-                  placeholder="Kimi API anahtarinizi girin"
+                  placeholder="Kimi API anahtarınızı girin"
                   placeholderTextColor={colors.textSubtle}
                   value={kimiKey}
                   onChangeText={setKimiKey}
@@ -346,7 +346,7 @@ export default function SettingsScreen() {
                 onPress={() => setShowAdvancedApi(!showAdvancedApi)}
               >
                 <Text style={[styles.advancedToggleText, { color: colors.textMuted }]}>
-                  Gelismis Ayarlar
+                  Gelişmiş Ayarlar
                 </Text>
                 {showAdvancedApi ? (
                   <ChevronDown size={14} color={colors.textMuted} />
@@ -384,7 +384,7 @@ export default function SettingsScreen() {
                 style={[styles.saveButton, { backgroundColor: colors.primary }]}
                 onPress={handleSaveApiKeys}
               >
-                <Text style={styles.saveButtonText}>API Anahtarlarini Kaydet</Text>
+                <Text style={styles.saveButtonText}>API Anahtarlarıni Kaydet</Text>
               </Pressable>
             </View>
           )}
@@ -395,7 +395,7 @@ export default function SettingsScreen() {
           <Text style={[styles.sectionTitle, { color: colors.text }]}>Bildirimler</Text>
 
           <View style={styles.option}>
-            <Text style={[styles.optionText, { color: colors.text }]}>Gunluk Hatirlatma</Text>
+            <Text style={[styles.optionText, { color: colors.text }]}>Günlük Hatırlatma</Text>
             <Switch
               value={reminderEnabled}
               onValueChange={handleReminderToggle}
@@ -409,7 +409,7 @@ export default function SettingsScreen() {
               <View style={styles.timePickerLabel}>
                 <Clock size={16} color={colors.textMuted} />
                 <Text style={[styles.optionText, { color: colors.text, marginLeft: 8 }]}>
-                  Hatirlatma Saati
+                  Hatırlatma Saati
                 </Text>
               </View>
               <View style={styles.timeInputs}>
@@ -443,12 +443,12 @@ export default function SettingsScreen() {
 
         {/* Data Management Section */}
         <View style={[styles.section, { backgroundColor: colors.surface }]}>
-          <Text style={[styles.sectionTitle, { color: colors.text }]}>Veri Yonetimi</Text>
+          <Text style={[styles.sectionTitle, { color: colors.text }]}>Veri Yönetimi</Text>
 
           <View style={styles.dataStats}>
             <View style={styles.dataStat}>
               <Text style={[styles.dataStatValue, { color: colors.primary }]}>{entryCount}</Text>
-              <Text style={[styles.dataStatLabel, { color: colors.textMuted }]}>Toplam Giris</Text>
+              <Text style={[styles.dataStatLabel, { color: colors.textMuted }]}>Toplam Giriş</Text>
             </View>
             <View style={[styles.dataStatDivider, { backgroundColor: colors.border }]} />
             <View style={styles.dataStat}>
@@ -470,7 +470,7 @@ export default function SettingsScreen() {
               <>
                 <Download size={18} color={colors.primary} />
                 <Text style={[styles.dataButtonText, { color: colors.primary }]}>
-                  Verileri Disa Aktar (JSON)
+                  Verileri Dışa Aktar (JSON)
                 </Text>
               </>
             )}
@@ -482,14 +482,14 @@ export default function SettingsScreen() {
           >
             <Trash2 size={18} color={colors.error} />
             <Text style={[styles.dataButtonText, { color: colors.error }]}>
-              Tum Verileri Sil
+              Tüm Verileri Sil
             </Text>
           </Pressable>
         </View>
 
         {/* About Section */}
         <View style={[styles.section, { backgroundColor: colors.surface }]}>
-          <Text style={[styles.sectionTitle, { color: colors.text }]}>Hakkinda</Text>
+          <Text style={[styles.sectionTitle, { color: colors.text }]}>Hakkında</Text>
 
           <View style={styles.option}>
             <Text style={[styles.optionText, { color: colors.textMuted }]}>Versiyon</Text>
@@ -497,7 +497,7 @@ export default function SettingsScreen() {
           </View>
 
           <View style={styles.option}>
-            <Text style={[styles.optionText, { color: colors.textMuted }]}>AI Gunluk</Text>
+            <Text style={[styles.optionText, { color: colors.textMuted }]}>AI Günlük</Text>
             <Text style={[styles.valueText, { color: colors.textSubtle }]}>setrox</Text>
           </View>
         </View>
