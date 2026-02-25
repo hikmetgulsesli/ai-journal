@@ -6,6 +6,17 @@ const SYSTEM_PROMPT = `Sen empatik ve destekleyici bir günlük asistanısın. K
 
 const PROMPT_GENERATION_PROMPT = `Sen empatik bir günlük asistanısın. Kullanıcıya Türkçe olarak düşünmeye teşvik edecek, derin ve anlamlı bir günlük sorusu sor. Soru kısa, açık ve kişisel olsun. Sadece soruyu yaz, başka bir şey yazma.`;
 
+const WEEKLY_SUMMARY_PROMPT = `Sen empatik ve akıllı bir günlük asistanısın. Aşağıdaki günlük yazılarını oku ve geçen haftanın genel bir özetini Türkçe olarak yaz. Özet şunları içersin:
+1. Haftanın genel ruh hali ve duygusal akışı
+2. Öne çıkan temalar veya konular
+3. Pozitif gelişmeler veya başarılar
+4. Zorluklar ve nasıl başa çıkıldığı
+5. Gelecek hafta için öneriler
+
+Özet 4-6 paragraf olsun, samimi ve destekleyici bir ton kullan.`;
+
+const WEEKLY_SUMMARY_SYSTEM = `Sen kullanıcının duygusal wellness koçusun. Haftalık özetlerini yazarken pozitif, motive edici ve empatik bir dil kullan. Kullanıcının gelişimini vurgula.`;
+
 // Turkish journal prompt suggestions for variety
 const CONTEXTUAL_PROMPTS = [
   "Bugün seni en çok ne düşündürdü?",
@@ -274,4 +285,74 @@ export async function saveApiKeys(minimaxKey?: string, kimiKey?: string): Promis
 
 export async function loadApiKeys(): Promise<{ minimax?: string; kimi?: string }> {
   return getApiKeys();
+}
+
+export async function generateWeeklySummary(entries: { text: string; date: string; mood?: number }[]): Promise<AIResponse> {
+  const settings = await getSettings();
+  const keys = await getApiKeys();
+  
+  if (entries.length === 0) {
+    return { success: false, error: 'Özetlenecek yazı bulunmuyor' };
+  }
+  
+  // Prepare entries text
+  const entriesText = entries.map((e, i) => {
+    const moodStr = e.mood ? ` (Ruh Hali: ${e.mood}/5)` : '';
+    return `${i + 1}. ${e.date}${moodStr}: ${e.text}`;
+  }).join('\n\n');
+  
+  const summaryPrompt = `${WEEKLY_SUMMARY_PROMPT}\n\n=== GÜNLÜK YAZILARI ===\n\n${entriesText}`;
+  
+  const { aiModel } = settings;
+  
+  // Try primary model first
+  if (aiModel === 'minimax' && keys.minimax) {
+    const result = await callMinimax(
+      keys.minimax,
+      settings.minimaxBaseUrl,
+      summaryPrompt,
+      WEEKLY_SUMMARY_SYSTEM
+    );
+    if (result.success) {
+      return result;
+    }
+  } else if (aiModel === 'kimi' && keys.kimi) {
+    const result = await callKimi(
+      keys.kimi,
+      settings.kimiBaseUrl,
+      summaryPrompt,
+      WEEKLY_SUMMARY_SYSTEM
+    );
+    if (result.success) {
+      return result;
+    }
+  }
+  
+  // Fallback to other model
+  if (aiModel === 'minimax' && keys.kimi) {
+    const result = await callKimi(
+      keys.kimi,
+      settings.kimiBaseUrl,
+      summaryPrompt,
+      WEEKLY_SUMMARY_SYSTEM
+    );
+    if (result.success) {
+      return result;
+    }
+  } else if (aiModel === 'kimi' && keys.minimax) {
+    const result = await callMinimax(
+      keys.minimax,
+      settings.minimaxBaseUrl,
+      summaryPrompt,
+      WEEKLY_SUMMARY_SYSTEM
+    );
+    if (result.success) {
+      return result;
+    }
+  }
+  
+  return { 
+    success: false, 
+    error: 'API anahtarları bulunamadı veya yapılandırılmadı. Lütfen Ayarlar\'dan API anahtarlarınızı ekleyin.' 
+  };
 }
